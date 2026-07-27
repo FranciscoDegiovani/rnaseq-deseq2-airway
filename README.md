@@ -1,12 +1,12 @@
 # RNA-seq Differential Expression Analysis — DESeq2
 
-Differential gene expression analysis using DESeq2, comparing dexamethasone-treated vs. untreated airway smooth muscle cells. Built as part of my bioinformatics/genomics portfolio, applying the same workflow used in transcriptomic research (differential expression, reproducible analysis, statistical modeling of count data).
+Differential gene expression analysis using DESeq2, comparing dexamethasone-treated vs. untreated airway smooth muscle cells. Built as part of my bioinformatics/genomics portfolio, applying the same workflow used in transcriptomic research (differential expression, reproducible analysis, statistical modeling of count data). Wrapped as a Snakemake pipeline for full reproducibility.
 
 ## Data Source
 
-- **Dataset:** airway (Bioconductor package) — RNA-seq data from Himes et al. (2014)
-- **Citation:** Himes BE, Jiang X, Wagner P, Hu R, Wang Q, Klanderman B, et al. (2014) RNA-Seq Transcriptome Profiling Identifies CRISPLD2 as a Glucocorticoid Responsive Gene that Modulates Cytokine Function in Airway Smooth Muscle Cells. PLoS ONE 9(6): e99625.
-- **Design:** 4 cell lines, each with a treated and untreated sample (paired design), 8 samples total
+- Dataset: airway (Bioconductor package) — RNA-seq data from Himes et al. (2014)
+- Citation: Himes BE, Jiang X, Wagner P, Hu R, Wang Q, Klanderman B, et al. (2014) RNA-Seq Transcriptome Profiling Identifies CRISPLD2 as a Glucocorticoid Responsive Gene that Modulates Cytokine Function in Airway Smooth Muscle Cells. PLoS ONE 9(6): e99625.
+- Design: 4 cell lines, each with a treated and untreated sample (paired design), 8 samples total
 
 ## Tools
 
@@ -14,8 +14,28 @@ Differential gene expression analysis using DESeq2, comparing dexamethasone-trea
 - DESeq2 (differential expression)
 - apeglm (log fold-change shrinkage) — Zhu, Ibrahim & Love (2018), Bioinformatics
 - pheatmap (visualization)
+- Snakemake (workflow orchestration)
 
-## Workflow
+## Pipeline
+
+This analysis is organized as a two-rule Snakemake pipeline instead of a single linear script, so each step declares its own inputs/outputs and can be re-run independently or in parallel:
+
+rule run_deseq2 -> loads data, fits the DESeq2 model, shrinks fold changes,
+exports the results table and intermediate .rds objects
+rule make_plots -> reads those .rds objects, generates all 4 figures
+rule all -> declares the final deliverables of the pipeline
+
+
+### Running it
+
+```bash
+pip install snakemake
+snakemake --cores 1
+```
+
+Snakemake automatically detects which steps are missing or outdated and only re-runs what's necessary.
+
+## Workflow (analysis steps)
 
 1. Load count data and sample metadata
 2. Build DESeq2 dataset with design ~ cell + dex (controlling for cell line, testing treatment effect)
@@ -33,21 +53,28 @@ Differential gene expression analysis using DESeq2, comparing dexamethasone-trea
 
 ## Structure
 
+Snakefile
+workflow/
 scripts/
-  analysis.R
+run_deseq2.R
+make_plots.R
 results/
-  deseq2_results.csv
-  plots/
-    ma_plot.png
-    volcano_plot.png
-    pca_plot.png
-    heatmap_top20.png
+deseq2_results.csv
+plots/
+ma_plot.png
+volcano_plot.png
+pca_plot.png
+heatmap_top20.png
+
+
+Note: `results/intermediate/` (trained model objects) and `.snakemake/` (run cache/logs) are excluded from version control — standard practice for reproducibility without repository bloat.
 
 ## Skills Demonstrated
 
 - RNA-seq differential expression analysis (DESeq2)
 - Experimental design-aware statistical modeling (controlling for confounding variables)
 - Data visualization for genomics (MA-plot, volcano plot, PCA, heatmap)
+- Workflow orchestration with Snakemake (declarative, dependency-aware pipeline)
 - Git version control integrated with RStudio
 - Reproducible, documented analysis workflow
 
